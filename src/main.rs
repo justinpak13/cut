@@ -32,7 +32,7 @@ fn main() -> Result<()> {
                     }
 
                     (keycode, CurrentDisplay::Add(_)) => {
-                        frontend::Add::match_keys(keycode, &mut app);
+                        frontend::add::match_keys(keycode, &mut app);
                     }
                     (KeyCode::Char('q') | KeyCode::Esc, _) => {
                         let _ = app.save();
@@ -41,14 +41,14 @@ fn main() -> Result<()> {
 
                     // based on display
                     (keycode, CurrentDisplay::Table) => {
-                        frontend::WeightTable::match_keys(keycode, &mut app);
+                        frontend::weight_table::match_keys(keycode, &mut app);
                     }
                     (keycode, CurrentDisplay::Graph(_)) => {
-                        frontend::WeightChart::match_keys(keycode, &mut app);
+                        frontend::weight_chart::match_keys(keycode, &mut app);
                     }
 
                     (keycode, CurrentDisplay::Delete) => {
-                        frontend::Delete::match_keys(keycode, &mut app);
+                        frontend::delete::match_keys(keycode, &mut app);
                     }
                     _ => {}
                 }
