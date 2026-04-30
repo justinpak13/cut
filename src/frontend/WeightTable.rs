@@ -2,15 +2,12 @@ use crossterm::event::KeyCode;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Style, Stylize};
-use ratatui::widgets::{Paragraph, Row, Table};
+use ratatui::widgets::{Row, Table};
 
-use ratatui::layout::Layout;
-use ratatui::style::Modifier;
-use ratatui::text::{Line, Span};
 
 use crate::app::{AppState, CurrentDisplay};
 use crate::frontend::Footer::render_footer;
-use crate::frontend::{CustomStyle, Delete};
+use crate::frontend::CustomStyle;
 /// Render a table with some rows and columns.
 pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
     let header = Row::new(["Date", "Weight"])
