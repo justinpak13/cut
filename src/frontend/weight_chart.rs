@@ -10,8 +10,8 @@ use std::ops::Bound::Included;
 
 use crate::app::{AddState, AppState, CurrentDisplay, GraphDisplay};
 
-use crate::frontend::CustomStyle;
-use crate::frontend::Footer::render_footer;
+use crate::frontend::custom_style;
+use crate::frontend::footer::render_footer;
 /// Render a chart going upward.
 pub fn render_chart(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
     let (btree, title): (BTreeMap<NaiveDate, f32>, &str) = match &app_state.get_display() {
@@ -53,7 +53,8 @@ pub fn render_chart(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
 
     // if less than 1 date, do not render chart
     if btree.len() <= 1 {
-        let text = Paragraph::new("Not enough data for a chart").block(CustomStyle::widget_block());
+        let text =
+            Paragraph::new("Not enough data for a chart").block(custom_style::widget_block());
         frame.render_widget(text, area);
         return;
     }

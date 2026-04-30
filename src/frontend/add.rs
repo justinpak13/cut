@@ -7,7 +7,7 @@ use ratatui::widgets::Paragraph;
 use ratatui::widgets::calendar::{CalendarEventStore, Monthly};
 
 use crate::app::{AddState, AppState, CurrentDisplay, Input};
-use crate::frontend::CustomStyle;
+use crate::frontend::custom_style;
 
 fn calendar_rect(area: Rect) -> Rect {
     let cal_width = 24;
@@ -42,9 +42,9 @@ pub fn render_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
     let input = match app.get_display() {
         CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(error_string))) => {
             Paragraph::new(app.input.as_str())
-                .block(CustomStyle::input_block_invalid(error_string.as_str()))
+                .block(custom_style::input_block_invalid(error_string.as_str()))
         }
-        _ => Paragraph::new(app.input.as_str()).block(CustomStyle::input_block_valid()),
+        _ => Paragraph::new(app.input.as_str()).block(custom_style::input_block_valid()),
     };
     frame.render_widget(input, input_area);
     #[expect(clippy::cast_possible_truncation)]

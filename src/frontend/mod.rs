@@ -1,9 +1,9 @@
-pub mod Add;
-pub mod CustomStyle;
-pub mod Delete;
-pub mod Footer;
-pub mod WeightChart;
-pub mod WeightTable;
+pub mod add;
+pub mod custom_style;
+pub mod delete;
+pub mod footer;
+pub mod weight_chart;
+pub mod weight_table;
 
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Stylize;
@@ -32,23 +32,23 @@ pub fn display_app(frame: &mut Frame, app: &mut AppState) {
     let keybindings = footer.centered(Constraint::Percentage(75), Constraint::Percentage(75));
 
     frame.render_widget(Clear, outer_boder);
-    frame.render_widget(CustomStyle::app_block(), outer_boder);
+    frame.render_widget(custom_style::app_block(), outer_boder);
 
     frame.render_widget(Clear, main);
     frame.render_widget(Clear, footer);
     frame.render_widget(Clear, top);
 
     render_top(frame, top);
-    frame.render_widget(CustomStyle::widget_block(), footer);
+    frame.render_widget(custom_style::widget_block(), footer);
 
     match app.get_display() {
         CurrentDisplay::Table => {
-            WeightTable::render_table(frame, main, app);
-            WeightTable::render_table_footer(frame, keybindings);
+            weight_table::render_table(frame, main, app);
+            weight_table::render_table_footer(frame, keybindings);
         }
         CurrentDisplay::Graph(_) => {
-            WeightChart::render_chart(frame, main, app);
-            WeightChart::render_chart_footer(frame, keybindings);
+            weight_chart::render_chart(frame, main, app);
+            weight_chart::render_chart_footer(frame, keybindings);
         }
         CurrentDisplay::Edit => {}
         CurrentDisplay::Add(add_state) => {
@@ -59,16 +59,16 @@ pub fn display_app(frame: &mut Frame, app: &mut AppState) {
             frame.render_widget(popup_block, centered_area);
             match add_state {
                 AddState::Calendar => {
-                    Add::render_current_month(frame, centered_area, app);
+                    add::render_current_month(frame, centered_area, app);
                 }
                 AddState::WeightInput(_) => {
-                    Add::render_input(frame, centered_area, app);
+                    add::render_input(frame, centered_area, app);
                 }
             }
         }
         CurrentDisplay::Delete => {
-            Delete::render_delete_confirmation(frame, main, app);
-            Delete::render_delete_footer(frame, keybindings);
+            delete::render_delete_confirmation(frame, main, app);
+            delete::render_delete_footer(frame, keybindings);
         }
     }
 }

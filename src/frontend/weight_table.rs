@@ -4,10 +4,9 @@ use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::widgets::{Row, Table};
 
-
 use crate::app::{AppState, CurrentDisplay};
-use crate::frontend::Footer::render_footer;
-use crate::frontend::CustomStyle;
+use crate::frontend::custom_style;
+use crate::frontend::footer::render_footer;
 /// Render a table with some rows and columns.
 pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
     let header = Row::new(["Date", "Weight"])
@@ -42,7 +41,7 @@ pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
         .column_highlight_style(Color::Gray)
         .cell_highlight_style(Style::new().reversed().yellow())
         .highlight_symbol("➤ ")
-        .block(CustomStyle::widget_block());
+        .block(custom_style::widget_block());
 
     frame.render_stateful_widget(table, area, &mut app.table_state);
 }

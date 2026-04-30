@@ -5,7 +5,7 @@ use ratatui::widgets::{Block, Clear, Paragraph};
 
 use crate::app::{AppState, CurrentDisplay};
 
-use crate::frontend::Footer::render_footer;
+use crate::frontend::footer::render_footer;
 /// Render a chart going upward.
 pub fn render_delete_confirmation(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
     let popup_block = Block::bordered().title("Confirm Delete");
