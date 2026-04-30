@@ -1,0 +1,13 @@
+[package]
+name = "cut"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ratatui = "0.30.0"
+clap = "4.6.0"
+chrono = "0.4.44"
+dirs = "6.0.0"
+crossterm = "0.29.0"
+color-eyre = "0.6.5"
+time = "0.3.47"
