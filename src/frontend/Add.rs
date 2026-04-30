@@ -1,21 +1,14 @@
-use chrono::{Datelike, Local};
-use color_eyre::Result;
-use crossterm::event::{self, KeyCode};
-use crossterm::style;
-use ratatui::layout::{Alignment, Constraint, Layout, Margin, Position, Rect};
-use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::symbols::{Marker, block};
-use ratatui::text::{Line, Span, Text};
+use crossterm::event::KeyCode;
+use ratatui::Frame;
+use ratatui::layout::{Constraint, Layout, Position, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::Text;
+use ratatui::widgets::Paragraph;
 use ratatui::widgets::calendar::{CalendarEventStore, Monthly};
-use ratatui::widgets::{
-    Axis, Block, Chart, Clear, Dataset, GraphType, Padding, Paragraph, Row, Table, TableState,
-};
-use ratatui::{Frame, layout};
-use time::{Date, OffsetDateTime};
 
 use crate::app::{AddState, AppState, CurrentDisplay, Input};
 use crate::frontend::CustomStyle;
-use crate::weightlog::WeightLog;
+
 fn calendar_rect(area: Rect) -> Rect {
     let cal_width = 24;
     let cal_height = 8;
@@ -49,7 +42,7 @@ pub fn render_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
     let input = match app.get_display() {
         CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(error_string))) => {
             Paragraph::new(app.input.as_str())
-                .block(CustomStyle::input_block_invalid(&error_string.as_str()))
+                .block(CustomStyle::input_block_invalid(error_string.as_str()))
         }
         _ => Paragraph::new(app.input.as_str()).block(CustomStyle::input_block_valid()),
     };

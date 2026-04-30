@@ -10,11 +10,9 @@ use std::io::BufReader;
 use std::io::{BufRead, Write};
 use time::Date;
 
-use ratatui::widgets::{
-    Axis, Block, Chart, Clear, Dataset, GraphType, Padding, Paragraph, Row, Table, TableState,
-};
+use ratatui::widgets::TableState;
 
-use crate::weightlog::{self, WeightLog};
+use crate::weightlog::WeightLog;
 
 #[derive(PartialEq, Eq)]
 pub enum CurrentDisplay {
@@ -61,12 +59,11 @@ pub struct AppState {
 
 impl AppState {
     pub fn init() -> Self {
-        let file = match check_file() {
-            Some(dir_entry) => dir_entry,
-            None => {
-                let _ = create_file();
-                check_file().expect("should have created file")
-            }
+        let file = if let Some(dir_entry) = check_file() {
+            dir_entry
+        } else {
+            let _ = create_file();
+            check_file().expect("should have created file")
         };
 
         let today = Local::now().date_naive();
@@ -78,13 +75,16 @@ impl AppState {
             let mut max_weight = f32::MIN;
             let mut min_weight = f32::MAX;
 
-            for value in data.iter() {
+            for value in &data {
                 max_weight = max_weight.max(value.get_weight());
                 min_weight = min_weight.min(value.get_weight());
             }
 
-            let current_date = Date::from_ordinal_date(today.year(), today.ordinal() as u16)
-                .expect("date should not cause error");
+            let current_date = Date::from_ordinal_date(
+                today.year(),
+                u16::try_from(today.ordinal()).expect("should not go past"),
+            )
+            .expect("date should not cause error");
 
             let min_date = data
                 .first()
@@ -131,9 +131,12 @@ impl AppState {
                 .and_then(convert_naive_date_to_date)
                 .unwrap_or_else(|| {
                     let today = Local::now();
-                    Date::from_ordinal_date(today.year(), today.ordinal() as u16)
-                        .expect("shoudl not have issues converting date")
-                })
+                    Date::from_ordinal_date(
+                        today.year(),
+                        u16::try_from(today.ordinal()).expect("should not go passed"),
+                    )
+                    .expect("shoudl not have issues converting date")
+                });
         }
 
         if convert_naive_date_to_date(deleted_log.get_date())
@@ -148,9 +151,12 @@ impl AppState {
                 .and_then(convert_naive_date_to_date)
                 .unwrap_or_else(|| {
                     let today = Local::now();
-                    Date::from_ordinal_date(today.year(), today.ordinal() as u16)
-                        .expect("shoudl not have issues converting date")
-                })
+                    Date::from_ordinal_date(
+                        today.year(),
+                        u16::try_from(today.ordinal()).expect("should not go past"),
+                    )
+                    .expect("shoudl not have issues converting date")
+                });
         }
 
         if deleted_log.get_weight() == self.max_weight {
@@ -159,7 +165,7 @@ impl AppState {
                 .iter()
                 .map(|x| x.get_weight())
                 .max_by(|a, b| a.total_cmp(b))
-                .unwrap_or(0.0)
+                .unwrap_or(0.0);
         }
         if deleted_log.get_weight() == self.min_weight {
             self.min_weight = self
@@ -167,7 +173,7 @@ impl AppState {
                 .iter()
                 .map(|x| x.get_weight())
                 .min_by(|a, b| a.total_cmp(b))
-                .unwrap_or(0.0)
+                .unwrap_or(0.0);
         }
         self.edited = true;
     }
@@ -184,7 +190,7 @@ impl AppState {
         let mut btree_map = BTreeMap::new();
         let mut count = HashMap::new();
 
-        for line in self.data.iter() {
+        for line in &self.data {
             let date = line.get_date();
             let weight = line.get_weight();
 
@@ -204,7 +210,7 @@ impl AppState {
         let mut btree_map = BTreeMap::new();
         let mut count = HashMap::new();
 
-        for line in self.data.iter() {
+        for line in &self.data {
             let date = line.get_date().week(chrono::Weekday::Mon).last_day();
             let weight = line.get_weight();
 
@@ -314,13 +320,16 @@ impl AppState {
                 ))));
             }
         }
-        self.input = "".to_string();
+        self.input = String::new();
     }
 
     fn input_data(&mut self) -> Result<WeightLog, Box<dyn Error>> {
         let new_log = WeightLog::new(
-            NaiveDate::from_yo_opt(self.current_date.year(), self.current_date.ordinal() as u32)
-                .expect("should not have issues with dates"),
+            NaiveDate::from_yo_opt(
+                self.current_date.year(),
+                u32::from(self.current_date.ordinal()),
+            )
+            .expect("should not have issues with dates"),
             self.input.parse::<f32>()?,
         );
 
@@ -343,7 +352,7 @@ fn get_data(path: &DirEntry) -> Result<Vec<WeightLog>, Box<dyn Error>> {
             continue;
         }
 
-        let mut fields = line.split(",");
+        let mut fields = line.split(',');
 
         let date = fields
             .next()
@@ -367,7 +376,7 @@ fn check_file() -> Option<DirEntry> {
     let path_variable = env::var("PATH");
 
     if let Ok(path) = path_variable {
-        for p in path.split(":") {
+        for p in path.split(':') {
             if let Some(entry) = search_for_file(p, FILE_NAME) {
                 return Some(entry);
             }
@@ -379,7 +388,7 @@ fn check_file() -> Option<DirEntry> {
         data_dir.push("cut");
         let data_dir_str = data_dir.to_str()?;
 
-        println!("{}", data_dir_str);
+        println!("{data_dir_str}");
 
         return search_for_file(data_dir_str, FILE_NAME);
     }
@@ -448,12 +457,12 @@ fn convert_naive_date_to_date(naive_date: NaiveDate) -> Option<Date> {
     let year = naive_date.year();
     let ordinal = naive_date.ordinal();
 
-    Date::from_ordinal_date(year, ordinal as u16).ok()
+    Date::from_ordinal_date(year, u16::try_from(ordinal).expect("should not go passed")).ok()
 }
 
 fn convert_date_to_naive_date(date: Date) -> Option<NaiveDate> {
     let year = date.year();
     let ordinal = date.ordinal();
 
-    NaiveDate::from_yo_opt(year, ordinal as u32)
+    NaiveDate::from_yo_opt(year, u32::from(ordinal))
 }

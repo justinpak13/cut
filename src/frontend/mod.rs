@@ -5,23 +5,13 @@ pub mod Footer;
 pub mod WeightChart;
 pub mod WeightTable;
 
-use chrono::Local;
-use color_eyre::Result;
-use crossterm::event::{self, KeyCode};
-use crossterm::style;
-use ratatui::layout::{Alignment, Constraint, Layout, Margin, Rect};
-use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::symbols::{Marker, block};
-use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::calendar::{CalendarEventStore, Monthly};
-use ratatui::widgets::{
-    Axis, Block, Chart, Clear, Dataset, GraphType, Padding, Paragraph, Row, Table, TableState,
-};
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::Stylize;
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Clear};
 use ratatui::{Frame, layout};
-use time::OffsetDateTime;
 
-use crate::app::{AddState, AppState, CurrentDisplay, Input};
-use crate::weightlog::WeightLog;
+use crate::app::{AddState, AppState, CurrentDisplay};
 
 pub fn display_app(frame: &mut Frame, app: &mut AppState) {
     let layout = Layout::default()

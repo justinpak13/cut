@@ -1,21 +1,10 @@
-use chrono::{Datelike, Local};
-use color_eyre::Result;
-use crossterm::event::{self, KeyCode};
-use crossterm::style;
-use ratatui::layout::{Alignment, Constraint, Layout, Margin, Rect};
-use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::symbols::{Marker, block};
-use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::calendar::{CalendarEventStore, Monthly};
-use ratatui::widgets::{
-    Axis, Block, Chart, Clear, Dataset, GraphType, Padding, Paragraph, Row, Table, TableState,
-};
-use ratatui::{Frame, layout};
-use time::OffsetDateTime;
+use crossterm::event::KeyCode;
+use ratatui::Frame;
+use ratatui::layout::{Constraint, Rect};
+use ratatui::widgets::{Block, Clear, Paragraph};
 
 use crate::app::{AppState, CurrentDisplay};
 
-use crate::frontend::CustomStyle;
 use crate::frontend::Footer::render_footer;
 /// Render a chart going upward.
 pub fn render_delete_confirmation(frame: &mut Frame, area: Rect, app_state: &mut AppState) {

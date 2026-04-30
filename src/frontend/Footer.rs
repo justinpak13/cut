@@ -1,10 +1,8 @@
-use crossterm::event::KeyCode;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Rect};
-use ratatui::style::{Color, Style, Stylize};
-use ratatui::widgets::{Paragraph, Row, Table};
+use ratatui::style::{Color, Style};
+use ratatui::widgets::Paragraph;
 
-use crate::app::{AppState, CurrentDisplay};
 use ratatui::layout::Layout;
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
@@ -13,7 +11,7 @@ use std::rc::Rc;
 pub fn render_footer(frame: &mut Frame, area: Rect, hints: &[(&str, &str)]) {
     let dynamic_areas = get_layout_based_on_keybindings(hints.len(), area);
 
-    create_dynamic_footer(frame, dynamic_areas, hints);
+    create_dynamic_footer(frame, &dynamic_areas, hints);
 }
 
 fn get_layout_based_on_keybindings(
@@ -47,7 +45,7 @@ fn get_layout_based_on_keybindings(
 
 fn create_dynamic_footer(
     frame: &mut Frame,
-    area: (Rc<[Rect]>, Rc<[Rect]>),
+    area: &(Rc<[Rect]>, Rc<[Rect]>),
     hints: &[(&str, &str)],
 ) {
     let key_style = Style::default()
