@@ -52,7 +52,6 @@ fn main() -> Result<()> {
                     (keycode, CurrentDisplay::Delete) => {
                         frontend::delete::match_keys(keycode, &mut app);
                     }
-                    _ => {}
                 }
             }
         }

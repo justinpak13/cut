@@ -2,12 +2,13 @@ use chrono::{Datelike, Local, NaiveDate};
 use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::error::Error;
-use std::fs;
+use std::fs::{self};
 use std::fs::DirEntry;
 use std::fs::read_dir;
 use std::fs::{File, OpenOptions};
 use std::io::BufReader;
 use std::io::{BufRead, Write};
+use std::path::{ PathBuf};
 use time::Date;
 
 use ratatui::widgets::TableState;
@@ -18,7 +19,6 @@ use crate::weightlog::WeightLog;
 pub enum CurrentDisplay {
     Table,
     Graph(GraphDisplay),
-    Edit,
     Add(AddState),
     Delete,
 }
@@ -230,16 +230,19 @@ impl AppState {
     }
 
     pub fn save(&self) -> Result<(), Box<dyn Error>> {
-        let mut file = OpenOptions::new().write(true).open(self.file.path())?;
+        let mut temp_file = PathBuf::from(self.file.path().parent().expect("shoudld not be in root"));
+        temp_file.push("temp_cut.txt");
+
+        let mut file = OpenOptions::new().create_new(true).write(true).open(&temp_file)?;
 
         for log in &self.data {
             writeln!(file, "{}", log.to_data_str())?;
         }
 
-        Ok(())
-    }
+        fs::rename(temp_file, self.file.path())?;
 
-    pub fn sort(&mut self) {
+        Ok(())
+
     }
 
     pub fn get_data(&self) -> &Vec<WeightLog> {
@@ -318,13 +321,8 @@ impl AppState {
                 self.min_date = self.min_date.min(
                     date
                 );
-
-                if date == self.max_date {
-                    self.data.push(weightlog);
-                } else {
-                    let index = self.data.iter().position(|x| x.get_date() >= weightlog.get_date()).unwrap_or(self.data.len());
-                    self.data.insert(index, weightlog);
-                }
+                let index = self.data.partition_point(|x| x.get_date() < weightlog.get_date());
+                self.data.insert(index, weightlog);
 
                 self.set_display(CurrentDisplay::Add(AddState::Calendar));
                 self.edited = true;
@@ -335,7 +333,7 @@ impl AppState {
                 ))));
             }
         }
-        self.char_buf = String::new();
+        self.char_buf.clear();
     }
 
     fn input_data(&mut self) -> Result<WeightLog, Box<dyn Error>> {
@@ -479,11 +477,3 @@ fn convert_naive_date_to_date(naive_date: NaiveDate) -> Option<Date> {
 
     Date::from_ordinal_date(year, u16::try_from(ordinal).expect("should not go passed")).ok()
 }
-
-fn convert_date_to_naive_date(date: Date) -> Option<NaiveDate> {
-    let year = date.year();
-    let ordinal = date.ordinal();
-
-    NaiveDate::from_yo_opt(year, u32::from(ordinal))
-}
-

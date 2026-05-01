@@ -15,9 +15,10 @@ pub fn render_delete_confirmation(frame: &mut Frame, area: Rect, app_state: &mut
     if let Some(index) = app_state.table_state.selected() {
         let log = &app_state.get_data()[index];
         let paragraph = Paragraph::new(format!(
-            "Date: {}\nWeight: {}",
+            "Date: {}\nWeight: {}\nNote: {}",
             log.get_date(),
-            log.get_weight()
+            log.get_weight(),
+            log.get_note().unwrap_or_default()
         ))
         .block(popup_block);
         frame.render_widget(paragraph, centered_area);

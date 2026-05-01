@@ -64,7 +64,6 @@ pub fn render_table_footer(frame: &mut Frame, area: Rect) {
         &[
             ("↑↓←→/kjhl", "navigate"),
             ("a", "add entry"),
-            ("e", "edit entry"),
             ("d", "delete entry"),
             ("c", "chart view"),
             ("s", "save"),

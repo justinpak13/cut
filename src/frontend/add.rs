@@ -163,7 +163,9 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
 
         CurrentDisplay::Add(AddState::NoteInput) => match keycode {
             KeyCode::Char(c) => {
-                app.enter_char(c);
+                if c != ',' {
+                    app.enter_char(c);
+                }
             }
             KeyCode::Backspace => {
                 app.delete_char();

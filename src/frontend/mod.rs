@@ -50,7 +50,6 @@ pub fn display_app(frame: &mut Frame, app: &mut AppState) {
             weight_chart::render_chart(frame, main, app);
             weight_chart::render_chart_footer(frame, keybindings);
         }
-        CurrentDisplay::Edit => {}
         CurrentDisplay::Add(add_state) => {
             let popup_block = Block::bordered().title("Select Date");
             let centered_area =
