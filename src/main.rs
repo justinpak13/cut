@@ -36,7 +36,9 @@ fn main() -> Result<()> {
                         app.set_display(CurrentDisplay::Add(AddState::Calendar));
                     }
                     (KeyCode::Char('q') | KeyCode::Esc, _) => {
-                        let _ = app.save();
+                        if app.edited {
+                            let _ = app.save();
+                        }
                         return Ok(());
                     }
 

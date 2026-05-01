@@ -56,7 +56,7 @@ pub struct AppState {
     pub min_weight: f32,
     pub min_date: Date,
     pub max_date: Date,
-    edited: bool,
+    pub edited: bool,
 }
 
 impl AppState {
@@ -238,6 +238,10 @@ impl AppState {
 
         Ok(())
     }
+
+    pub fn sort(&mut self) {
+    }
+
     pub fn get_data(&self) -> &Vec<WeightLog> {
         &self.data
     }
@@ -303,17 +307,25 @@ impl AppState {
     pub fn submit(&mut self) {
         match self.input_data() {
             Ok(weightlog) => {
+                let date = convert_naive_date_to_date(weightlog.get_date())
+                        .expect("should not have problems converting");
+
                 self.max_weight = self.max_weight.max(weightlog.get_weight());
                 self.min_weight = self.min_weight.min(weightlog.get_weight());
                 self.max_date = self.max_date.max(
-                    convert_naive_date_to_date(weightlog.get_date())
-                        .expect("should not have problems converting"),
+                    date
                 );
                 self.min_date = self.min_date.min(
-                    convert_naive_date_to_date(weightlog.get_date())
-                        .expect("should not have problems converting"),
+                    date
                 );
-                self.data.push(weightlog);
+
+                if date == self.max_date {
+                    self.data.push(weightlog);
+                } else {
+                    let index = self.data.iter().position(|x| x.get_date() >= weightlog.get_date()).unwrap_or(self.data.len());
+                    self.data.insert(index, weightlog);
+                }
+
                 self.set_display(CurrentDisplay::Add(AddState::Calendar));
                 self.edited = true;
             }
@@ -474,3 +486,4 @@ fn convert_date_to_naive_date(date: Date) -> Option<NaiveDate> {
 
     NaiveDate::from_yo_opt(year, u32::from(ordinal))
 }
+
