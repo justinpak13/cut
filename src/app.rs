@@ -189,6 +189,18 @@ impl AppState {
         self.display = display;
     }
 
+    pub fn go_to_prev_date(&mut self) {
+        let index = self.data.partition_point(|x| convert_naive_date_to_date(x.get_date()).expect("should not have problems converting") < self.current_date);
+        
+        self.current_date = convert_naive_date_to_date(self.data[index.checked_sub(1).unwrap_or(0)].get_date()).expect("shout not have problems converting");
+    }
+
+    pub fn go_to_next_date(&mut self) {
+        let index = self.data.partition_point(|x| convert_naive_date_to_date(x.get_date()).expect("should not have problems converting") <= self.current_date);
+        
+        self.current_date = convert_naive_date_to_date(self.data[index.min(self.data.len() -  1)].get_date()).expect("shout not have problems converting");
+    }
+
     pub fn get_average_daily_data(&self) -> BTreeMap<NaiveDate, f32> {
         let mut btree_map = BTreeMap::new();
         let mut count = HashMap::new();

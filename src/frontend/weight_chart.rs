@@ -123,21 +123,13 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
         KeyCode::Char('t') => app.set_display(CurrentDisplay::Table),
         KeyCode::Char('h') | KeyCode::Left => {
             if app.get_display() == &CurrentDisplay::Graph(GraphDisplay::Week) {
-                app.current_date = app
-                    .current_date
-                    .previous_day()
-                    .expect("should not have issues going back one day")
-                    .max(app.min_date)
+                app.go_to_prev_date();
             }
         }
 
         KeyCode::Char('l') | KeyCode::Right => {
             if app.get_display() == &CurrentDisplay::Graph(GraphDisplay::Week) {
-                app.current_date = app
-                    .current_date
-                    .next_day()
-                    .expect("should not have issues going forward one day")
-                    .min(app.max_date)
+                app.go_to_next_date();
             }
         }
         _ => {}
