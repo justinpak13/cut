@@ -3,11 +3,12 @@ use chrono::{Local, NaiveDate};
 pub struct WeightLog {
     date: NaiveDate,
     weight: f32,
+    note: Option<String>
 }
 
 impl WeightLog {
-    pub fn new(date: NaiveDate, weight: f32) -> Self {
-        WeightLog { date, weight }
+    pub fn new(date: NaiveDate, weight: f32, note: Option<String>) -> Self {
+        WeightLog { date, weight, note }
     }
 
     pub fn to_str(&self) -> String {
@@ -21,7 +22,7 @@ impl WeightLog {
     }
 
     pub fn to_data_str(&self) -> String {
-        format!("{},{}", self.date.format("%Y-%m-%d"), self.weight)
+        format!("{},{},{}", self.date.format("%Y-%m-%d"), self.weight, self.get_note().unwrap_or_default())
     }
 
     pub fn get_date(&self) -> NaiveDate {
@@ -31,6 +32,10 @@ impl WeightLog {
     pub fn get_weight(&self) -> f32 {
         self.weight
     }
+
+    pub fn get_note(&self) -> Option<String> {
+        self.note.clone()
+    }
 }
 
 impl Default for WeightLog {
@@ -38,6 +43,7 @@ impl Default for WeightLog {
         WeightLog {
             date: Local::now().date_naive(),
             weight: 0.0,
+            note: None
         }
     }
 }

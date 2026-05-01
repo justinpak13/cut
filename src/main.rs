@@ -22,17 +22,18 @@ fn main() -> Result<()> {
             terminal.draw(|frame| display_app(frame, &mut app))?;
             if let Some(key) = event::read()?.as_key_press_event() {
                 match (key.code, app.get_display()) {
-                    // always on keycodes
+                    // add could take any char as input so takes precedence
+                    (keycode, CurrentDisplay::Add(_)) => {
+                        frontend::add::match_keys(keycode, &mut app);
+                    }
+
+                    // always on keycodes outside of add
                     (KeyCode::Char('c'), _) => {
                         app.set_display(CurrentDisplay::Graph(app::GraphDisplay::Total));
                     }
                     (KeyCode::Char('t'), _) => app.set_display(CurrentDisplay::Table),
                     (KeyCode::Char('a'), _) => {
                         app.set_display(CurrentDisplay::Add(AddState::Calendar));
-                    }
-
-                    (keycode, CurrentDisplay::Add(_)) => {
-                        frontend::add::match_keys(keycode, &mut app);
                     }
                     (KeyCode::Char('q') | KeyCode::Esc, _) => {
                         let _ = app.save();
@@ -46,7 +47,6 @@ fn main() -> Result<()> {
                     (keycode, CurrentDisplay::Graph(_)) => {
                         frontend::weight_chart::match_keys(keycode, &mut app);
                     }
-
                     (keycode, CurrentDisplay::Delete) => {
                         frontend::delete::match_keys(keycode, &mut app);
                     }

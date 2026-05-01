@@ -34,6 +34,7 @@ pub enum GraphDisplay {
 pub enum AddState {
     Calendar,
     WeightInput(Input),
+    NoteInput
 }
 
 #[derive(PartialEq, Eq)]
@@ -48,7 +49,8 @@ pub struct AppState {
     pub display: CurrentDisplay,
     pub table_state: TableState,
     pub current_date: Date,
-    pub input: String,
+    pub current_weight: f32,
+    pub char_buf: String,
     pub character_index: usize,
     pub max_weight: f32,
     pub min_weight: f32,
@@ -104,7 +106,8 @@ impl AppState {
                 display: CurrentDisplay::Table,
                 table_state: TableState::default(),
                 current_date,
-                input: recent_weight.to_string(),
+                current_weight: recent_weight,
+                char_buf: recent_weight.to_string(),
                 character_index: recent_weight.to_string().len(),
                 edited: false,
                 max_weight,
@@ -251,7 +254,7 @@ impl AppState {
 
     pub fn enter_char(&mut self, new_char: char) {
         let index = self.byte_index();
-        self.input.insert(index, new_char);
+        self.char_buf.insert(index, new_char);
         self.move_cursor_right();
     }
 
@@ -260,11 +263,11 @@ impl AppState {
     /// Since each character in a string can contain multiple bytes, it's necessary to calculate
     /// the byte index based on the index of the character.
     pub fn byte_index(&self) -> usize {
-        self.input
+        self.char_buf
             .char_indices()
             .map(|(i, _)| i)
             .nth(self.character_index)
-            .unwrap_or(self.input.len())
+            .unwrap_or(self.character_index)
     }
 
     pub fn delete_char(&mut self) {
@@ -278,19 +281,19 @@ impl AppState {
             let from_left_to_current_index = current_index - 1;
 
             // Getting all characters before the selected character.
-            let before_char_to_delete = self.input.chars().take(from_left_to_current_index);
+            let before_char_to_delete = self.char_buf.chars().take(from_left_to_current_index);
             // Getting all characters after selected character.
-            let after_char_to_delete = self.input.chars().skip(current_index);
+            let after_char_to_delete = self.char_buf.chars().skip(current_index);
 
             // Put all characters together except the selected one.
             // By leaving the selected one out, it is forgotten and therefore deleted.
-            self.input = before_char_to_delete.chain(after_char_to_delete).collect();
+            self.char_buf = before_char_to_delete.chain(after_char_to_delete).collect();
             self.move_cursor_left();
         }
     }
 
     pub fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
-        new_cursor_pos.clamp(0, self.input.chars().count())
+        new_cursor_pos.clamp(0, self.char_buf.chars().count())
     }
 
     pub fn reset_cursor(&mut self) {
@@ -320,7 +323,7 @@ impl AppState {
                 ))));
             }
         }
-        self.input = String::new();
+        self.char_buf = String::new();
     }
 
     fn input_data(&mut self) -> Result<WeightLog, Box<dyn Error>> {
@@ -330,7 +333,8 @@ impl AppState {
                 u32::from(self.current_date.ordinal()),
             )
             .expect("should not have issues with dates"),
-            self.input.parse::<f32>()?,
+            self.current_weight,
+           if self.char_buf.is_empty() {None} else {Some(self.char_buf.clone())} 
         );
 
         Ok(new_log)
@@ -364,7 +368,11 @@ fn get_data(path: &DirEntry) -> Result<Vec<WeightLog>, Box<dyn Error>> {
             .and_then(|x| x.parse::<f32>().ok())
             .ok_or(FileReadError::new("error reading weight"))?;
 
-        data.push(WeightLog::new(date, weight));
+        let note = fields
+            .next()
+            .and_then(|x| Some(x.to_string()));
+
+        data.push(WeightLog::new(date, weight, note));
     }
 
     Ok(data)

@@ -33,7 +33,7 @@ pub fn render_current_month(frame: &mut Frame, area: Rect, app: &mut AppState) {
     frame.render_widget(this_month, calendar_area);
 }
 
-pub fn render_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
+pub fn render_weight_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
     let layout = Layout::vertical([Constraint::Length(1), Constraint::Length(3)]);
     let [help_area, input_area] = area.layout(&layout);
     let help_message = Paragraph::new(Text::from("Input Weight"));
@@ -41,11 +41,30 @@ pub fn render_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
 
     let input = match app.get_display() {
         CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(error_string))) => {
-            Paragraph::new(app.input.as_str())
+            Paragraph::new(app.char_buf.as_str())
                 .block(custom_style::input_block_invalid(error_string.as_str()))
         }
-        _ => Paragraph::new(app.input.as_str()).block(custom_style::input_block_valid()),
+        _ => Paragraph::new(app.char_buf.as_str()).block(custom_style::input_block_valid()),
     };
+    frame.render_widget(input, input_area);
+    #[expect(clippy::cast_possible_truncation)]
+    frame.set_cursor_position(Position::new(
+        // Draw the cursor at the current position in the input field.
+        // This position can be controlled via the left and right arrow key
+        input_area.x + app.character_index as u16 + 1,
+        // Move one line down, from the border to the input line
+        input_area.y + 1,
+    ));
+}
+
+pub fn render_note_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
+    let layout = Layout::vertical([Constraint::Length(1), Constraint::Length(3)]);
+    let [help_area, input_area] = area.layout(&layout);
+    let help_message = Paragraph::new(Text::from("Input Note (Optional)"));
+    frame.render_widget(help_message, help_area);
+
+    let input = Paragraph::new(app.char_buf.as_str()).block(custom_style::input_block_valid());
+
     frame.render_widget(input, input_area);
     #[expect(clippy::cast_possible_truncation)]
     frame.set_cursor_position(Position::new(
@@ -118,7 +137,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
                 app.enter_char('9');
             }
             KeyCode::Char('.') => {
-                if !app.input.contains(".") {
+                if !app.char_buf.contains(".") {
                     app.enter_char('.');
                 }
             }
@@ -126,14 +145,41 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
                 app.delete_char();
             }
             KeyCode::Enter => {
-                app.submit();
-                app.reset_cursor();
+                if let Ok(value) = app.char_buf.parse::<f32>() {
+                    app.current_weight = value; 
+                    app.char_buf.clear();
+                    app.set_display(CurrentDisplay::Add(AddState::NoteInput));
+                    app.reset_cursor();
+                } else {
+                    app.char_buf.clear();
+                    app.reset_cursor();
+                }
             }
             KeyCode::Char('q') | KeyCode::Esc => {
                 app.set_display(CurrentDisplay::Add(AddState::Calendar));
             }
             _ => {}
         },
+
+        CurrentDisplay::Add(AddState::NoteInput) => match keycode {
+            KeyCode::Char(c) => {
+                app.enter_char(c);
+            }
+            KeyCode::Backspace => {
+                app.delete_char();
+            }
+
+            KeyCode::Esc => {
+                app.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Valid)));
+            }
+            KeyCode::Enter => {
+                app.submit();
+                app.reset_cursor();
+                app.set_display(CurrentDisplay::Add(AddState::Calendar));
+            }
+            _ => {}
+        },
+
         _ => unreachable!(),
     };
 }

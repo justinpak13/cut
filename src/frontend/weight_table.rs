@@ -9,14 +9,14 @@ use crate::frontend::custom_style;
 use crate::frontend::footer::render_footer;
 /// Render a table with some rows and columns.
 pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
-    let header = Row::new(["Date", "Weight"])
+    let header = Row::new(["Date", "Weight", "Notes"])
         .style(Style::new().bold())
         .bottom_margin(1);
 
     let rows: Vec<Row> = app
         .get_data()
         .iter()
-        .map(|log| Row::new([log.get_date().to_string(), log.get_weight().to_string()]))
+        .map(|log| Row::new([log.get_date().to_string(), log.get_weight().to_string(), log.get_note().unwrap_or_else(|| String::new())]))
         .collect();
 
     let total = app.get_data().len();
@@ -31,7 +31,7 @@ pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
         .min(total),
         total
     )]);
-    let widths = [Constraint::Percentage(30), Constraint::Percentage(50)];
+    let widths = [Constraint::Percentage(20), Constraint::Percentage(20), Constraint::Fill(1)];
     let table = Table::new(rows, widths)
         .header(header)
         .footer(footer.italic())

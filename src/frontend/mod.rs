@@ -62,7 +62,10 @@ pub fn display_app(frame: &mut Frame, app: &mut AppState) {
                     add::render_current_month(frame, centered_area, app);
                 }
                 AddState::WeightInput(_) => {
-                    add::render_input(frame, centered_area, app);
+                    add::render_weight_input(frame, centered_area, app);
+                }
+                AddState::NoteInput => {
+                    add::render_note_input(frame, centered_area, app);
                 }
             }
         }
