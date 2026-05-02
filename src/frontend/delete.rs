@@ -3,7 +3,7 @@ use ratatui::Frame;
 use ratatui::layout::{Constraint, Rect};
 use ratatui::widgets::{Block, Clear, Paragraph};
 
-use crate::app::{AppState, CurrentDisplay};
+use crate::app::{AppState, CurrentDisplay, TableDisplay};
 
 use crate::frontend::footer::render_footer;
 /// Render a chart going upward.
@@ -41,7 +41,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
         _ => {}
     };
 
-    app.set_display(CurrentDisplay::Table);
+    app.set_display(CurrentDisplay::Table(TableDisplay::Total));
 }
 
 fn delete_log(app: &mut AppState) {

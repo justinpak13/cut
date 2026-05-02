@@ -11,7 +11,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Clear};
 use ratatui::{Frame, layout};
 
-use crate::app::{AddState, AppState, CurrentDisplay};
+use crate::app::{AddState, AppState, CurrentDisplay, TableDisplay};
 
 pub fn display_app(frame: &mut Frame, app: &mut AppState) {
     let layout = Layout::default()
@@ -42,9 +42,13 @@ pub fn display_app(frame: &mut Frame, app: &mut AppState) {
     frame.render_widget(custom_style::widget_block(), footer);
 
     match app.get_display() {
-        CurrentDisplay::Table => {
-            weight_table::render_table(frame, main, app);
-            weight_table::render_table_footer(frame, keybindings);
+        CurrentDisplay::Table(TableDisplay::Total) => {
+            weight_table::render_total_table(frame, main, app);
+            weight_table::render_total_table_footer(frame, keybindings);
+        }
+        CurrentDisplay::Table(TableDisplay::Week) => {
+            weight_table::render_weekly_table(frame, main, app);
+            weight_table::render_weekly_table_footer(frame, keybindings);
         }
         CurrentDisplay::Graph(_) => {
             weight_chart::render_chart(frame, main, app);

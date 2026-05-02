@@ -8,7 +8,7 @@ use ratatui::widgets::{Axis, Block, Chart, Dataset, GraphType, Paragraph};
 use std::collections::BTreeMap;
 use std::ops::Bound::Included;
 
-use crate::app::{AddState, AppState, CurrentDisplay, GraphDisplay};
+use crate::app::{AddState, AppState, CurrentDisplay, GraphDisplay, TableDisplay};
 
 use crate::frontend::custom_style;
 use crate::frontend::footer::render_footer;
@@ -120,7 +120,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
         KeyCode::Char('w') => app.set_display(CurrentDisplay::Graph(GraphDisplay::AverageWeekly)),
         KeyCode::Char('s') => app.set_display(CurrentDisplay::Graph(GraphDisplay::Week)),
         KeyCode::Char('a') => app.set_display(CurrentDisplay::Add(AddState::Calendar)),
-        KeyCode::Char('t') => app.set_display(CurrentDisplay::Table),
+        KeyCode::Char('t') => app.set_display(CurrentDisplay::Table(TableDisplay::Total)),
         KeyCode::Char('h') | KeyCode::Left => {
             if app.get_display() == &CurrentDisplay::Graph(GraphDisplay::Week) {
                 app.go_to_prev_date();

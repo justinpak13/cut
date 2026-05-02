@@ -31,7 +31,9 @@ fn main() -> Result<()> {
                     (KeyCode::Char('c'), _) => {
                         app.set_display(CurrentDisplay::Graph(app::GraphDisplay::Total));
                     }
-                    (KeyCode::Char('t'), _) => app.set_display(CurrentDisplay::Table),
+                    (KeyCode::Char('t'), _) => {
+                        app.set_display(CurrentDisplay::Table(app::TableDisplay::Total))
+                    }
                     (KeyCode::Char('a'), _) => {
                         app.set_display(CurrentDisplay::Add(AddState::Calendar));
                     }
@@ -43,7 +45,7 @@ fn main() -> Result<()> {
                     }
 
                     // based on display
-                    (keycode, CurrentDisplay::Table) => {
+                    (keycode, CurrentDisplay::Table(_)) => {
                         frontend::weight_table::match_keys(keycode, &mut app);
                     }
                     (keycode, CurrentDisplay::Graph(_)) => {

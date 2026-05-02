@@ -2,13 +2,13 @@ use chrono::{Datelike, Local, NaiveDate};
 use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::error::Error;
-use std::fs::{self};
 use std::fs::DirEntry;
 use std::fs::read_dir;
+use std::fs::{self};
 use std::fs::{File, OpenOptions};
 use std::io::BufReader;
 use std::io::{BufRead, Write};
-use std::path::{ PathBuf};
+use std::path::PathBuf;
 use time::Date;
 
 use ratatui::widgets::TableState;
@@ -17,10 +17,16 @@ use crate::weightlog::WeightLog;
 
 #[derive(PartialEq, Eq)]
 pub enum CurrentDisplay {
-    Table,
+    Table(TableDisplay),
     Graph(GraphDisplay),
     Add(AddState),
     Delete,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum TableDisplay {
+    Total,
+    Week,
 }
 
 #[derive(PartialEq, Eq)]
@@ -34,7 +40,7 @@ pub enum GraphDisplay {
 pub enum AddState {
     Calendar,
     WeightInput(Input),
-    NoteInput
+    NoteInput,
 }
 
 #[derive(PartialEq, Eq)]
@@ -103,7 +109,7 @@ impl AppState {
             return AppState {
                 file,
                 data,
-                display: CurrentDisplay::Table,
+                display: CurrentDisplay::Table(TableDisplay::Total),
                 table_state: TableState::default(),
                 current_date,
                 current_weight: recent_weight,
@@ -190,15 +196,25 @@ impl AppState {
     }
 
     pub fn go_to_prev_date(&mut self) {
-        let index = self.data.partition_point(|x| convert_naive_date_to_date(x.get_date()).expect("should not have problems converting") < self.current_date);
-        
-        self.current_date = convert_naive_date_to_date(self.data[index.checked_sub(1).unwrap_or(0)].get_date()).expect("shout not have problems converting");
+        let index = self.data.partition_point(|x| {
+            convert_naive_date_to_date(x.get_date()).expect("should not have problems converting")
+                < self.current_date
+        });
+
+        self.current_date =
+            convert_naive_date_to_date(self.data[index.checked_sub(1).unwrap_or(0)].get_date())
+                .expect("shout not have problems converting");
     }
 
     pub fn go_to_next_date(&mut self) {
-        let index = self.data.partition_point(|x| convert_naive_date_to_date(x.get_date()).expect("should not have problems converting") <= self.current_date);
-        
-        self.current_date = convert_naive_date_to_date(self.data[index.min(self.data.len() -  1)].get_date()).expect("shout not have problems converting");
+        let index = self.data.partition_point(|x| {
+            convert_naive_date_to_date(x.get_date()).expect("should not have problems converting")
+                <= self.current_date
+        });
+
+        self.current_date =
+            convert_naive_date_to_date(self.data[index.min(self.data.len() - 1)].get_date())
+                .expect("shout not have problems converting");
     }
 
     pub fn get_average_daily_data(&self) -> BTreeMap<NaiveDate, f32> {
@@ -242,10 +258,14 @@ impl AppState {
     }
 
     pub fn save(&self) -> Result<(), Box<dyn Error>> {
-        let mut temp_file = PathBuf::from(self.file.path().parent().expect("shoudld not be in root"));
+        let mut temp_file =
+            PathBuf::from(self.file.path().parent().expect("shoudld not be in root"));
         temp_file.push("temp_cut.txt");
 
-        let mut file = OpenOptions::new().create_new(true).write(true).open(&temp_file)?;
+        let mut file = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&temp_file)?;
 
         for log in &self.data {
             writeln!(file, "{}", log.to_data_str())?;
@@ -254,7 +274,6 @@ impl AppState {
         fs::rename(temp_file, self.file.path())?;
 
         Ok(())
-
     }
 
     pub fn get_data(&self) -> &Vec<WeightLog> {
@@ -323,17 +342,15 @@ impl AppState {
         match self.input_data() {
             Ok(weightlog) => {
                 let date = convert_naive_date_to_date(weightlog.get_date())
-                        .expect("should not have problems converting");
+                    .expect("should not have problems converting");
 
                 self.max_weight = self.max_weight.max(weightlog.get_weight());
                 self.min_weight = self.min_weight.min(weightlog.get_weight());
-                self.max_date = self.max_date.max(
-                    date
-                );
-                self.min_date = self.min_date.min(
-                    date
-                );
-                let index = self.data.partition_point(|x| x.get_date() < weightlog.get_date());
+                self.max_date = self.max_date.max(date);
+                self.min_date = self.min_date.min(date);
+                let index = self
+                    .data
+                    .partition_point(|x| x.get_date() < weightlog.get_date());
                 self.data.insert(index, weightlog);
 
                 self.set_display(CurrentDisplay::Add(AddState::Calendar));
@@ -356,7 +373,11 @@ impl AppState {
             )
             .expect("should not have issues with dates"),
             self.current_weight,
-           if self.char_buf.is_empty() {None} else {Some(self.char_buf.clone())} 
+            if self.char_buf.is_empty() {
+                None
+            } else {
+                Some(self.char_buf.clone())
+            },
         );
 
         Ok(new_log)
@@ -390,9 +411,7 @@ fn get_data(path: &DirEntry) -> Result<Vec<WeightLog>, Box<dyn Error>> {
             .and_then(|x| x.parse::<f32>().ok())
             .ok_or(FileReadError::new("error reading weight"))?;
 
-        let note = fields
-            .next()
-            .and_then(|x| Some(x.to_string()));
+        let note = fields.next().and_then(|x| Some(x.to_string()));
 
         data.push(WeightLog::new(date, weight, note));
     }

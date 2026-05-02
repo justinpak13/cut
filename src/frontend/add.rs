@@ -6,7 +6,7 @@ use ratatui::text::Text;
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::calendar::{CalendarEventStore, Monthly};
 
-use crate::app::{AddState, AppState, CurrentDisplay, Input};
+use crate::app::{AddState, AppState, CurrentDisplay, Input, TableDisplay};
 use crate::frontend::custom_style;
 
 fn calendar_rect(area: Rect) -> Rect {
@@ -100,7 +100,9 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
             KeyCode::Enter => {
                 app.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Valid)));
             }
-            KeyCode::Char('q') | KeyCode::Esc => app.set_display(CurrentDisplay::Table),
+            KeyCode::Char('q') | KeyCode::Esc => {
+                app.set_display(CurrentDisplay::Table(TableDisplay::Total))
+            }
             _ => {}
         },
         CurrentDisplay::Add(AddState::WeightInput(_)) => match keycode {
@@ -146,7 +148,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
             }
             KeyCode::Enter => {
                 if let Ok(value) = app.char_buf.parse::<f32>() {
-                    app.current_weight = value; 
+                    app.current_weight = value;
                     app.char_buf.clear();
                     app.set_display(CurrentDisplay::Add(AddState::NoteInput));
                     app.reset_cursor();
