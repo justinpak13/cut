@@ -1,27 +1,90 @@
+use std::cmp::Ordering;
+
 use crossterm::event::KeyCode;
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Style, Stylize};
-use ratatui::widgets::{Row, Table};
+use ratatui::widgets::{Cell, Paragraph, Row, Table};
 
 use crate::app::{AppState, CurrentDisplay};
 use crate::frontend::custom_style;
 use crate::frontend::footer::render_footer;
+
+const WEIGHT_LOSS_STYLE: Style = Style::new().light_green();
+const WEIGHT_GAIN_STYLE: Style = Style::new().light_red();
+const LOWEST_STYLE: Style = Style::new().blue().bold().slow_blink();
+
 /// Render a table with some rows and columns.
 pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
-    let header = Row::new(["Date", "Weight", "Notes"])
+    let header = Row::new(["Date", "Weight", "+/-", "Notes"])
         .style(Style::new().bold())
         .bottom_margin(1);
 
-    let rows: Vec<Row> = app
-        .get_data()
-        .iter()
-        .map(|log| Row::new([log.get_date().to_string(), log.get_weight().to_string(), log.get_note().unwrap_or_else(|| String::new())]))
-        .collect();
+    let data = app.get_data();
+    let total = data.len();
 
-    let total = app.get_data().len();
+    if total == 0 {
+        frame.render_widget(
+            Paragraph::new("There is no data. Please add a weight log")
+                .block(custom_style::widget_block()),
+            area,
+        );
+        return;
+    }
 
-    let footer = Row::new([format!(
+    let mut rows: Vec<Row> = Vec::with_capacity(total);
+
+    rows.push({
+        let log = data
+            .first()
+            .expect("if there are not entries, should be caught above");
+
+        let weight = log.get_weight();
+
+        Row::new([
+            Cell::new(log.get_date().to_string()),
+            Cell::new(format!("{:.2}", weight)).style(if weight == app.min_weight {
+                LOWEST_STYLE
+            } else {
+                Style::new()
+            }),
+            Cell::new(String::new()),
+            Cell::new(log.get_note().unwrap_or_default()),
+        ])
+    });
+
+    for window in data.windows(2) {
+        let current_log = &window[1];
+        let prev_log = &window[0];
+
+        let difference = current_log.get_weight() - prev_log.get_weight();
+        let difference_style = match difference.partial_cmp(&0.0) {
+            Some(Ordering::Greater) => WEIGHT_GAIN_STYLE,
+            Some(Ordering::Less) => WEIGHT_LOSS_STYLE,
+            _ => Style::new(),
+        };
+
+        let weight = current_log.get_weight();
+
+        let row = Row::new([
+            Cell::new(current_log.get_date().to_string()),
+            Cell::new(format!("{:.2}", weight)).style(if weight == app.min_weight {
+                LOWEST_STYLE
+            } else {
+                Style::new()
+            }),
+            Cell::new(format!("{difference:+.2}")).style(difference_style),
+            Cell::new(current_log.get_note().unwrap_or_else(String::new)),
+        ]);
+        rows.push(row);
+    }
+
+    let stats = format!(
+        "Min: {:.2} | Max: {:.2} | Start: {} | End: {}",
+        app.min_weight, app.max_weight, app.min_date, app.max_date
+    );
+
+    let position = Row::new([format!(
         "{}/{}",
         (app.table_state
             .selected()
@@ -29,19 +92,28 @@ pub fn render_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
             .checked_add(1)
             .unwrap_or(total))
         .min(total),
-        total
+        total,
     )]);
-    let widths = [Constraint::Percentage(20), Constraint::Percentage(20), Constraint::Fill(1)];
+
+    let widths = [
+        Constraint::Length(11),
+        Constraint::Percentage(10),
+        Constraint::Percentage(10),
+        Constraint::Fill(1),
+    ];
     let table = Table::new(rows, widths)
         .header(header)
-        .footer(footer.italic())
+        .footer(position.italic())
         .column_spacing(1)
         .style(Color::White)
         .row_highlight_style(Style::new().on_black().bold())
-        .column_highlight_style(Color::Gray)
         .cell_highlight_style(Style::new().reversed().yellow())
         .highlight_symbol("➤ ")
-        .block(custom_style::widget_block());
+        .block(
+            custom_style::widget_block()
+                .title_bottom(stats)
+                .title_alignment(ratatui::layout::HorizontalAlignment::Center),
+        );
 
     frame.render_stateful_widget(table, area, &mut app.table_state);
 }
@@ -56,7 +128,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
         KeyCode::Char('G') => app.table_state.select_last(),
         KeyCode::Char('d') | KeyCode::Char('D') => app.set_display(CurrentDisplay::Delete),
         _ => {}
-    };
+    }
 }
 
 pub fn render_table_footer(frame: &mut Frame, area: Rect) {
