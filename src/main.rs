@@ -27,12 +27,18 @@ fn main() -> Result<()> {
                         frontend::add::match_keys(keycode, &mut app);
                     }
 
+                    // needs to be over the quit so q can go back to calendar instead of closing
+                    // entire app
+                    (keycode, CurrentDisplay::Delete) => {
+                        frontend::delete::match_keys(keycode, &mut app);
+                    }
+
                     // always on keycodes outside of add
                     (KeyCode::Char('c'), _) => {
                         app.set_display(CurrentDisplay::Graph(app::GraphDisplay::Total));
                     }
                     (KeyCode::Char('t'), _) => {
-                        app.set_display(CurrentDisplay::Table(app::TableDisplay::Total))
+                        app.set_display(CurrentDisplay::Table(app::TableDisplay::Total));
                     }
                     (KeyCode::Char('a'), _) => {
                         app.set_display(CurrentDisplay::Add(AddState::Calendar));
@@ -50,9 +56,6 @@ fn main() -> Result<()> {
                     }
                     (keycode, CurrentDisplay::Graph(_)) => {
                         frontend::weight_chart::match_keys(keycode, &mut app);
-                    }
-                    (keycode, CurrentDisplay::Delete) => {
-                        frontend::delete::match_keys(keycode, &mut app);
                     }
                 }
             }

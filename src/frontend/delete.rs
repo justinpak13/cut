@@ -39,7 +39,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
     match keycode {
         KeyCode::Char('y') | KeyCode::Char('Y') => delete_log(app),
         _ => {}
-    };
+    }
 
     app.set_display(CurrentDisplay::Table(TableDisplay::Total));
 }
