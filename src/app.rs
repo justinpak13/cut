@@ -1,6 +1,5 @@
 use chrono::{Datelike, Local, NaiveDate};
 use std::collections::{BTreeMap, HashMap};
-use std::env;
 use std::error::Error;
 use std::fs::DirEntry;
 use std::fs::read_dir;
@@ -9,6 +8,7 @@ use std::fs::{File, OpenOptions};
 use std::io::BufReader;
 use std::io::{BufRead, Write};
 use std::path::PathBuf;
+use std::{env, io};
 use time::Date;
 
 use ratatui::widgets::TableState;
@@ -257,7 +257,7 @@ impl AppState {
         btree_map
     }
 
-    pub fn save(&self) -> Result<(), Box<dyn Error>> {
+    pub fn save(&self) -> io::Result<()> {
         let mut temp_file =
             PathBuf::from(self.file.path().parent().expect("shoudld not be in root"));
         temp_file.push("temp_cut.txt");
