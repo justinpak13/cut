@@ -8,6 +8,8 @@ use std::fs::{File, OpenOptions};
 use std::io::BufReader;
 use std::io::{BufRead, Write};
 use std::path::PathBuf;
+use std::thread;
+use std::thread::JoinHandle;
 use std::{env, io};
 use time::Date;
 
@@ -128,6 +130,8 @@ impl AppState {
 
     pub fn delete_log(&mut self, index: usize) {
         let deleted_log = self.data.remove(index);
+        self.edited = true;
+        let handle = self.save();
         if convert_naive_date_to_date(deleted_log.get_date())
             .expect("should not have issues converting dates")
             == self.min_date
@@ -184,7 +188,7 @@ impl AppState {
                 .min_by(|a, b| a.total_cmp(b))
                 .unwrap_or(0.0);
         }
-        self.edited = true;
+        handle.join().ok();
     }
 
     pub fn get_display(&self) -> &CurrentDisplay {
@@ -257,23 +261,28 @@ impl AppState {
         btree_map
     }
 
-    pub fn save(&self) -> io::Result<()> {
-        let mut temp_file =
-            PathBuf::from(self.file.path().parent().expect("shoudld not be in root"));
-        temp_file.push("temp_cut.txt");
+    pub fn save(&mut self) -> JoinHandle<io::Result<()>> {
+        let data = self.data.clone();
+        let path = self.file.path();
 
-        let mut file = OpenOptions::new()
-            .create_new(true)
-            .write(true)
-            .open(&temp_file)?;
+        let handle = thread::spawn(move || -> io::Result<()> {
+            let mut temp_file = PathBuf::from(path.parent().expect("shoudld not be in root"));
+            temp_file.push("temp_cut.txt");
 
-        for log in &self.data {
-            writeln!(file, "{}", log.to_data_str())?;
-        }
+            let mut file = OpenOptions::new()
+                .create_new(true)
+                .write(true)
+                .open(&temp_file)?;
+            for log in &data {
+                writeln!(file, "{}", log.to_data_str())?;
+            }
+            fs::rename(temp_file, path)?;
+            Ok(())
+        });
 
-        fs::rename(temp_file, self.file.path())?;
+        self.edited = false;
 
-        Ok(())
+        handle
     }
 
     pub fn get_data(&self) -> &Vec<WeightLog> {
@@ -343,7 +352,6 @@ impl AppState {
             Ok(weightlog) => {
                 let date = convert_naive_date_to_date(weightlog.get_date())
                     .expect("should not have problems converting");
-
                 self.max_weight = self.max_weight.max(weightlog.get_weight());
                 self.min_weight = self.min_weight.min(weightlog.get_weight());
                 self.max_date = self.max_date.max(date);
@@ -352,8 +360,6 @@ impl AppState {
                     .data
                     .partition_point(|x| x.get_date() < weightlog.get_date());
                 self.data.insert(index, weightlog);
-
-                self.set_display(CurrentDisplay::Add(AddState::Calendar));
                 self.edited = true;
             }
             Err(e) => {

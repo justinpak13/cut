@@ -39,8 +39,7 @@ fn main() -> Result<()> {
 
 enum Message {
     Keystroke(KeyCode),
-    Error(String),
-    Save,
+    Draw,
     Quit,
 }
 
@@ -54,14 +53,9 @@ fn main_thread(
         match message {
             Message::Keystroke(keycode) => {
                 handle_input(keycode, app, tx);
+            }
+            Message::Draw => {
                 terminal.draw(|frame| display_app(frame, app))?;
-            }
-            Message::Error(error) => {
-                eprintln!("{error}");
-                break;
-            }
-            Message::Save => {
-                let handle = thread::spawn(|| app.save());
             }
             Message::Quit => break,
         }
@@ -74,39 +68,51 @@ fn handle_input(input: KeyCode, app: &mut AppState, input_tx: &Sender<Message>) 
     match (input, app.get_display()) {
         // add could take any char as input so takes precedence
         (keycode, CurrentDisplay::Add(_)) => {
-            frontend::add::match_keys(keycode, app);
+            if frontend::add::match_keys(keycode, app) {
+                input_tx.send(Message::Draw).ok();
+            }
         }
         // needs to be over the quit so q can go back to calendar instead of closing
         // entire app
         (keycode, CurrentDisplay::Delete) => {
-            frontend::delete::match_keys(keycode, app);
+            if frontend::delete::match_keys(keycode, app) {
+                input_tx.send(Message::Draw).ok();
+            }
         }
 
         // always on keycodes outside of add
         (KeyCode::Char('c'), _) => {
             app.set_display(CurrentDisplay::Graph(app::GraphDisplay::Total));
+            input_tx.send(Message::Draw).ok();
         }
         (KeyCode::Char('t'), _) => {
             app.set_display(CurrentDisplay::Table(app::TableDisplay::Total));
+            input_tx.send(Message::Draw).ok();
         }
         (KeyCode::Char('a'), _) => {
             app.set_display(CurrentDisplay::Add(AddState::Calendar));
+            input_tx.send(Message::Draw).ok();
         }
         (KeyCode::Char('q') | KeyCode::Esc, _) => {
-            if app.edited {
-                let _ = app.save();
-            }
+            let save_handle = if app.edited { Some(app.save()) } else { None };
             input_tx
                 .send(Message::Quit)
                 .expect("channel should not be broken");
+            if let Some(handle) = save_handle {
+                let _ = handle.join().expect("should be able to save file");
+            }
         }
 
         // based on display
         (keycode, CurrentDisplay::Table(_)) => {
-            frontend::weight_table::match_keys(keycode, app);
+            if frontend::weight_table::match_keys(keycode, app) {
+                input_tx.send(Message::Draw).ok();
+            }
         }
         (keycode, CurrentDisplay::Graph(_)) => {
-            frontend::weight_chart::match_keys(keycode, app);
+            if frontend::weight_chart::match_keys(keycode, app) {
+                input_tx.send(Message::Draw).ok();
+            }
         }
     }
 }

@@ -35,13 +35,14 @@ pub fn render_delete_footer(frame: &mut Frame, area: Rect) {
     render_footer(frame, area, hints);
 }
 
-pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
-    match keycode {
-        KeyCode::Char('y') | KeyCode::Char('Y') => delete_log(app),
-        _ => {}
+pub fn match_keys(keycode: KeyCode, app: &mut AppState) -> bool {
+    if let KeyCode::Char('y' | 'Y') = keycode {
+        delete_log(app);
     }
 
     app.set_display(CurrentDisplay::Table(TableDisplay::Total));
+
+    true
 }
 
 fn delete_log(app: &mut AppState) {

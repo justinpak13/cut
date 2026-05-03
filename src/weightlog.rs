@@ -1,10 +1,11 @@
 use chrono::{Local, NaiveDate};
 use std::fmt;
 
+#[derive(Clone)]
 pub struct WeightLog {
     date: NaiveDate,
     weight: f32,
-    note: Option<String>
+    note: Option<String>,
 }
 
 impl WeightLog {
@@ -12,9 +13,13 @@ impl WeightLog {
         WeightLog { date, weight, note }
     }
 
-
     pub fn to_data_str(&self) -> String {
-        format!("{},{},{}", self.date.format("%Y-%m-%d"), self.weight, self.get_note().unwrap_or_else(|| String::new()))
+        format!(
+            "{},{},{}",
+            self.date.format("%Y-%m-%d"),
+            self.weight,
+            self.get_note().unwrap_or_else(|| String::new())
+        )
     }
 
     pub fn get_date(&self) -> NaiveDate {
@@ -35,14 +40,13 @@ impl Default for WeightLog {
         WeightLog {
             date: Local::now().date_naive(),
             weight: 0.0,
-            note: None
+            note: None,
         }
     }
 }
 
 impl fmt::Debug for WeightLog {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
         f.debug_struct("WeightLog")
             .field("Date", &self.date.format("%Y-%m-%d"))
             .field("Weight", &self.weight)

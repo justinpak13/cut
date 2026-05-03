@@ -76,34 +76,34 @@ pub fn render_note_input(frame: &mut Frame, area: Rect, app: &mut AppState) {
     ));
 }
 
-pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
+pub fn match_keys(keycode: KeyCode, app: &mut AppState) -> bool {
     match app.display {
         CurrentDisplay::Add(AddState::Calendar) => match keycode {
             KeyCode::Char('j') | KeyCode::Down => {
-                app.current_date = app.current_date.next_occurrence(app.current_date.weekday())
+                app.current_date = app.current_date.next_occurrence(app.current_date.weekday());
             }
             KeyCode::Char('k') | KeyCode::Up => {
-                app.current_date = app.current_date.prev_occurrence(app.current_date.weekday())
+                app.current_date = app.current_date.prev_occurrence(app.current_date.weekday());
             }
             KeyCode::Char('l') | KeyCode::Right => {
                 app.current_date = app
                     .current_date
                     .next_day()
-                    .expect("should not have an issue with next day")
+                    .expect("should not have an issue with next day");
             }
             KeyCode::Char('h') | KeyCode::Left => {
                 app.current_date = app
                     .current_date
                     .previous_day()
-                    .expect("should not have an issue with next day")
+                    .expect("should not have an issue with next day");
             }
             KeyCode::Enter => {
                 app.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Valid)));
             }
             KeyCode::Char('q') | KeyCode::Esc => {
-                app.set_display(CurrentDisplay::Table(TableDisplay::Total))
+                app.set_display(CurrentDisplay::Table(TableDisplay::Total));
             }
-            _ => {}
+            _ => return false,
         },
         CurrentDisplay::Add(AddState::WeightInput(_)) => match keycode {
             KeyCode::Char('0') => {
@@ -139,7 +139,7 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
                 app.enter_char('9');
             }
             KeyCode::Char('.') => {
-                if !app.char_buf.contains(".") {
+                if !app.char_buf.contains('.') {
                     app.enter_char('.');
                 }
             }
@@ -160,7 +160,9 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
             KeyCode::Char('q') | KeyCode::Esc => {
                 app.set_display(CurrentDisplay::Add(AddState::Calendar));
             }
-            _ => {}
+            _ => {
+                return false;
+            }
         },
 
         CurrentDisplay::Add(AddState::NoteInput) => match keycode {
@@ -178,12 +180,15 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
             }
             KeyCode::Enter => {
                 app.submit();
+                let handle = app.save();
                 app.reset_cursor();
                 app.set_display(CurrentDisplay::Add(AddState::Calendar));
+                handle.join().ok();
             }
-            _ => {}
+            _ => return false,
         },
 
         _ => unreachable!(),
-    };
+    }
+    true
 }

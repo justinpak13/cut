@@ -114,7 +114,7 @@ pub fn render_chart(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
     frame.render_widget(chart, area);
 }
 
-pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
+pub fn match_keys(keycode: KeyCode, app: &mut AppState) -> bool {
     match keycode {
         KeyCode::Char('d') => app.set_display(CurrentDisplay::Graph(GraphDisplay::Total)),
         KeyCode::Char('w') => app.set_display(CurrentDisplay::Graph(GraphDisplay::AverageWeekly)),
@@ -132,8 +132,11 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
                 app.go_to_next_date();
             }
         }
-        _ => {}
-    };
+        _ => {
+            return false;
+        }
+    }
+    true
 }
 
 pub fn render_chart_footer(frame: &mut Frame, area: Rect) {

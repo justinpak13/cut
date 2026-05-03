@@ -215,7 +215,7 @@ pub fn render_weekly_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
     frame.render_stateful_widget(table, area, &mut app.table_state);
 }
 
-pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
+pub fn match_keys(keycode: KeyCode, app: &mut AppState) -> bool {
     match keycode {
         KeyCode::Char('j') | KeyCode::Down => app.table_state.select_next(),
         KeyCode::Char('k') | KeyCode::Up => app.table_state.select_previous(),
@@ -235,8 +235,12 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) {
         {
             app.set_display(CurrentDisplay::Delete);
         }
-        _ => {}
+        _ => {
+            return false;
+        }
     }
+
+    true
 }
 
 pub fn render_total_table_footer(frame: &mut Frame, area: Rect) {
