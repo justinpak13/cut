@@ -361,6 +361,7 @@ impl AppState {
                     .partition_point(|x| x.get_date() < weightlog.get_date());
                 self.data.insert(index, weightlog);
                 self.edited = true;
+                self.table_state.select(Some(index));
             }
             Err(e) => {
                 self.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(
