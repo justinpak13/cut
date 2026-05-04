@@ -172,7 +172,7 @@ impl AppState {
                 });
         }
 
-        if deleted_log.get_weight() == self.max_weight {
+        if (deleted_log.get_weight() - self.max_weight).abs() < 0.005 {
             self.max_weight = self
                 .data
                 .iter()
@@ -180,7 +180,7 @@ impl AppState {
                 .max_by(|a, b| a.total_cmp(b))
                 .unwrap_or(0.0);
         }
-        if deleted_log.get_weight() == self.min_weight {
+        if (deleted_log.get_weight() - self.min_weight).abs() < 0.005 {
             self.min_weight = self
                 .data
                 .iter()
@@ -206,7 +206,7 @@ impl AppState {
         });
 
         self.current_date =
-            convert_naive_date_to_date(self.data[index.checked_sub(1).unwrap_or(0)].get_date())
+            convert_naive_date_to_date(self.data[index.saturating_sub(1)].get_date())
                 .expect("shout not have problems converting");
     }
 
@@ -348,32 +348,24 @@ impl AppState {
     }
 
     pub fn submit(&mut self) {
-        match self.input_data() {
-            Ok(weightlog) => {
-                let date = convert_naive_date_to_date(weightlog.get_date())
-                    .expect("should not have problems converting");
-                self.max_weight = self.max_weight.max(weightlog.get_weight());
-                self.min_weight = self.min_weight.min(weightlog.get_weight());
-                self.max_date = self.max_date.max(date);
-                self.min_date = self.min_date.min(date);
-                let index = self
-                    .data
-                    .partition_point(|x| x.get_date() < weightlog.get_date());
-                self.data.insert(index, weightlog);
-                self.edited = true;
-                self.table_state.select(Some(index));
-            }
-            Err(e) => {
-                self.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(
-                    e.to_string(),
-                ))));
-            }
-        }
+        let weightlog = self.input_data();
+        let date = convert_naive_date_to_date(weightlog.get_date())
+            .expect("should not have problems converting");
+        self.max_weight = self.max_weight.max(weightlog.get_weight());
+        self.min_weight = self.min_weight.min(weightlog.get_weight());
+        self.max_date = self.max_date.max(date);
+        self.min_date = self.min_date.min(date);
+        let index = self
+            .data
+            .partition_point(|x| x.get_date() < weightlog.get_date());
+        self.data.insert(index, weightlog);
+        self.edited = true;
+        self.table_state.select(Some(index));
         self.char_buf.clear();
     }
 
-    fn input_data(&mut self) -> Result<WeightLog, Box<dyn Error>> {
-        let new_log = WeightLog::new(
+    fn input_data(&mut self) -> WeightLog {
+        WeightLog::new(
             NaiveDate::from_yo_opt(
                 self.current_date.year(),
                 u32::from(self.current_date.ordinal()),
@@ -385,9 +377,7 @@ impl AppState {
             } else {
                 Some(self.char_buf.clone())
             },
-        );
-
-        Ok(new_log)
+        )
     }
 }
 
@@ -418,7 +408,7 @@ fn get_data(path: &DirEntry) -> Result<Vec<WeightLog>, Box<dyn Error>> {
             .and_then(|x| x.parse::<f32>().ok())
             .ok_or(FileReadError::new("error reading weight"))?;
 
-        let note = fields.next().and_then(|x| Some(x.to_string()));
+        let note = fields.next().map(|x| x.to_string());
 
         data.push(WeightLog::new(date, weight, note));
     }

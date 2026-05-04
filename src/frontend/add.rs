@@ -153,6 +153,9 @@ pub fn match_keys(keycode: KeyCode, app: &mut AppState) -> bool {
                     app.set_display(CurrentDisplay::Add(AddState::NoteInput));
                     app.reset_cursor();
                 } else {
+                    app.set_display(CurrentDisplay::Add(AddState::WeightInput(Input::Invalid(
+                        "bad weight input".to_string(),
+                    ))));
                     app.char_buf.clear();
                     app.reset_cursor();
                 }

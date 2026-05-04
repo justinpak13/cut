@@ -43,7 +43,7 @@ pub fn render_total_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
 
         Row::new([
             Cell::new(log.get_date().to_string()),
-            Cell::new(format!("{:.2}", weight)).style(if weight == app.min_weight {
+            Cell::new(format!("{weight:.2}")).style(if (weight - app.min_weight).abs() < 0.005 {
                 LOWEST_STYLE
             } else {
                 Style::new()
@@ -68,7 +68,7 @@ pub fn render_total_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
 
         let row = Row::new([
             Cell::new(current_log.get_date().to_string()),
-            Cell::new(format!("{:.2}", weight)).style(if weight == app.min_weight {
+            Cell::new(format!("{weight:.2}")).style(if (weight - app.min_weight).abs() < 0.005 {
                 LOWEST_STYLE
             } else {
                 Style::new()
@@ -135,8 +135,8 @@ pub fn render_weekly_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
         return;
     }
 
-    let min_average_weight: f32 = *data.values().min_by(|a, b| a.total_cmp(&b)).unwrap_or(&0.0);
-    let max_average_weight: f32 = *data.values().max_by(|a, b| a.total_cmp(&b)).unwrap_or(&0.0);
+    let min_average_weight: f32 = *data.values().min_by(|a, b| a.total_cmp(b)).unwrap_or(&0.0);
+    let max_average_weight: f32 = *data.values().max_by(|a, b| a.total_cmp(b)).unwrap_or(&0.0);
 
     let mut rows: Vec<Row> = Vec::with_capacity(total);
     rows.push({
@@ -144,11 +144,13 @@ pub fn render_weekly_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
 
         Row::new([
             Cell::new(entry.key().to_string()),
-            Cell::new(format!("{:.2}", entry.get())).style(if entry.get() == &app.min_weight {
-                LOWEST_STYLE
-            } else {
-                Style::new()
-            }),
+            Cell::new(format!("{:.2}", entry.get())).style(
+                if (entry.get() - app.min_weight).abs() < 0.005 {
+                    LOWEST_STYLE
+                } else {
+                    Style::new()
+                },
+            ),
             Cell::new(String::new()),
         ])
     });
@@ -167,7 +169,7 @@ pub fn render_weekly_table(frame: &mut Frame, area: Rect, app: &mut AppState) {
 
         let row = Row::new([
             Cell::new(current_value.0.to_string()),
-            Cell::new(format!("{:.2}", weight)).style(if weight == app.min_weight {
+            Cell::new(format!("{weight:.2}")).style(if (weight - app.min_weight).abs() < 0.005 {
                 LOWEST_STYLE
             } else {
                 Style::new()

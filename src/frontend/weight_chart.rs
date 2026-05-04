@@ -26,7 +26,7 @@ pub fn render_chart(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
         CurrentDisplay::Graph(GraphDisplay::Week) => {
             let today = NaiveDate::from_yo_opt(
                 app_state.current_date.year(),
-                app_state.current_date.ordinal() as u32,
+                u32::from(app_state.current_date.ordinal()),
             )
             .expect("should not have issues creating date");
             let a_week_ago = today
@@ -67,28 +67,29 @@ pub fn render_chart(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
 
     let data: Vec<(f64, f64)> = btree
         .iter()
-        .map(|(k, v)| (k.to_epoch_days() as f64, *v as f64))
+        .map(|(k, v)| (f64::from(k.to_epoch_days()), f64::from(*v)))
         .collect();
 
     let mid_label = btree
         .keys()
         .min_by_key(|d| {
-            (d.to_epoch_days() as f64
-                - ((max_date.to_epoch_days() as f64 + min_date.to_epoch_days() as f64) / 2.0))
-                .abs() as i64
+            (f64::from(d.to_epoch_days())
+                - (f64::from(max_date.to_epoch_days())
+                    .midpoint(f64::from(min_date.to_epoch_days()))))
+            .abs() as i64
         })
         .map(|d| d.to_string())
         .unwrap_or_default();
 
     let x_axis = Axis::default()
         .bounds([
-            min_date.to_epoch_days() as f64,
-            max_date.to_epoch_days() as f64,
+            f64::from(min_date.to_epoch_days()),
+            f64::from(max_date.to_epoch_days()),
         ])
         .labels([min_date.to_string(), mid_label, max_date.to_string()]);
 
     let y_axis = Axis::default()
-        .bounds([min_weight as f64, max_weight as f64])
+        .bounds([f64::from(min_weight), f64::from(max_weight)])
         .labels([
             min_weight.to_string(),
             (min_weight + (max_weight - min_weight) / 2.0).to_string(),

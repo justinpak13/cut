@@ -18,7 +18,7 @@ impl WeightLog {
             "{},{},{}",
             self.date.format("%Y-%m-%d"),
             self.weight,
-            self.get_note().unwrap_or_else(|| String::new())
+            self.get_note().unwrap_or_default()
         )
     }
 
